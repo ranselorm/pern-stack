@@ -6,6 +6,12 @@ const PORT = 3000;
 const router = express.Router();
 app.use(express.json());
 
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`New ${req.method} request made to ${req.url} at`, timestamp);
+  next();
+});
+
 const cars = [
   { id: 1, make: "Toyota", model: "Camry", year: 2022, price: 28500 },
   { id: 2, make: "Honda", model: "Accord", year: 2023, price: 32000 },
@@ -30,11 +36,21 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const newCar = { ...req.body };
+  const { make, model, year, price } = req.body;
+  if (!make || !model || !year || !price) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  const newCar = {
+    id: cars.length + 1,
+    make,
+    model,
+    year,
+    price,
+  };
+
   cars.push(newCar);
   console.log(newCar);
-  //   console.log(req.body);
-  res.send("New car endpoint");
 });
 
 router.patch("/:id", (req, res) => {
@@ -76,4 +92,6 @@ router.get("/:id", (req, res) => {
 
 app.use("/api/v1/cars", router);
 
-app.listen(PORT, () => console.log(`App is listening on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`App is listening on http://localhost:${PORT}`)
+);
