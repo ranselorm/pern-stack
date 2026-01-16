@@ -1,6 +1,7 @@
 import express from "express";
 import { db } from "./db.js";
 import { cars } from "./schema.js";
+import { eq } from "drizzle-orm";
 
 const app = express();
 const PORT = 3000;
@@ -14,8 +15,11 @@ app.use((req, res, next) => {
   next();
 });
 
-router.get("/", (req, res) => {
-  res.json(cars);
+// Get all cars
+router.get("/", async (req, res) => {
+  const allCars = await db.select().from(cars);
+
+  res.status(200).json(allCars);
 });
 
 // Post request
@@ -34,20 +38,27 @@ router.post("/", async (req, res) => {
   res.status(201).json(car);
 });
 
-router.patch("/:id", (req, res) => {
+// Patch request
+router.patch("/:id", async (req, res) => {
   const { params, body } = req;
   const parseId = parseInt(params.id);
 
-  const carIndex = cars.findIndex((car) => car.id === parseId);
+  //   const carIndex = cars.findIndex((car) => car.id === parseId);
 
-  console.log(carIndex);
+  //   if (!carIndex === -1) {
+  //     return res.status(404).send("No car found!");
+  //   }
 
-  if (!carIndex === -1) {
-    return res.status(404).send("No car found!");
-  }
+  const car = await db
+    .update(cars)
+    .set({ ...body })
+    .where(eq(cars.id, parseId))
+    .returning();
 
-  cars[carIndex] = { ...cars[carIndex], ...req.body };
-  res.json(cars[carIndex]);
+  res.status(200).json(car);
+
+  //   cars[carIndex] = { ...cars[carIndex], ...body };
+  //   res.json(cars[carIndex]);
 
   //   res.send("Update specific car by id");
 
