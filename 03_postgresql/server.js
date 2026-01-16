@@ -56,30 +56,28 @@ router.patch("/:id", async (req, res) => {
     .returning();
 
   res.status(200).json(car);
-
-  //   cars[carIndex] = { ...cars[carIndex], ...body };
-  //   res.json(cars[carIndex]);
-
-  //   res.send("Update specific car by id");
-
-  //   console.log(car);
 });
 
-router.delete("/:id", (req, res) => {
-  res.send("Delete car");
-});
-
-router.get("/:id", (req, res) => {
+// Delete handler
+router.delete("/:id", async (req, res) => {
   const parseId = parseInt(req.params.id);
 
-  const car = cars.find((car) => car.id === parseId);
+  const [car] = await db.delete(cars).where(eq(cars.id, parseId)).returning();
+
+  res.status(200).json(car);
+});
+
+// Get by id
+router.get("/:id", async (req, res) => {
+  const parseId = parseInt(req.params.id);
+
+  const [car] = await db.select().from(cars).where(eq(cars.id, parseId));
 
   if (!car) {
-    return res.status(404).send("No car found!");
+    return res.status(404).json({ error: "No car found!" });
   }
-  res.json(car);
 
-  //   res.send("Get one car by id");
+  res.status(200).json(car);
 });
 
 app.use("/api/v1/cars", router);
